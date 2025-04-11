@@ -55,7 +55,6 @@
           (snapshot) => {
             const data = snapshot.val();
             if (data) {
-              console.log("User data:", data);
               draw(data)
             } else {
               console.log("No data available for user:", userId);
@@ -67,33 +66,56 @@
         );
       }
 
+      //chage here
+      const template = [
+        [0, "掃除", "household", Date(), 10],
+        [1, "風呂洗い", "household", Date(), 30],
+        [2, "皿洗い", "household", Date(), 1],
+        [3, "dammy", "household", Date(), 0.01]
+      ]
+
+      setInterval(() => {
+        sessionStorage.setItem("scrollY", window.scrollY);
+        location.reload()
+      }, 60 * 1000);
+
+
+      // ページ読み込み時に復元（自動実行）
+       
       function draw(data) {
         let count = 0
         data.forEach(datum => {
-            console.log(datum.plan_name)
-
-            let percent = 66
-            let colorCode = "#f46060"
             let date = new Date(datum.start_date)
-            let startDate = "開始 " + String(date.getMonth() + 1) + "/" + String(date.getDate());
-            let duration = "期間 " + datum.duration + "日"
 
+            const now = new Date();
+
+            // ミリ秒単位の差
+            const diffTime = now - date;
+
+            // ミリ秒 → 日数（1日は 1000 * 60 * 60 * 24 ミリ秒）
+            const diffDays = diffTime / (1000 * 60 * 60 * 24);
+
+            let progress_percent = Math.round(diffDays / datum.duration  * 100)  
+            let colorCode = "#f46060"
+            let startDate = "開始 " + `${String(date.getMonth() + 1)}/${String(date.getDate())} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+            let duration = "期間 " + datum.duration + "日" 
+
+           
             let content = '<div class="card"><div class="title">'
             content += datum.plan_name
             content += '</div><div class="progress-item" data-percent="'
-            content += percent
+            content += progress_percent
             content += '" data-duration="1020" data-stroke-width="9" data-stroke-color="'
             content += colorCode
             content += '"data-start-position="default"><div class="progress-item__inner"><svg class="progress-svg" viewBox="0 0 80 80"><circle class="progress-background"cx="40"cy="40"r="30"></circle><circle class="progress-bar" cx="40" cy="40" r="30"></circle></svg><div class="progress-text"></div></div><div><div>'
             content += startDate
             content += '</div><div>'
             content += duration
-            content += '</div></div></div><div class="btn btn--orange" id='
+            content += '</div></div></div><div class="btn btn--orange" id=ele'
             content += count
             content += '>完了</div></div>'
 
 
-            console.log(content)
             let container = document.querySelector(".cards")
             container.innerHTML += content
 
@@ -107,7 +129,10 @@
                     return
                 }
 
-                const percent = parseFloat(entry.target.dataset.percent)
+                let percent = parseFloat(entry.target.dataset.percent)
+                if(percent > 100){
+                  percent = 100
+                }
 
                 if( !Number.isFinite(percent)){
                     return false
@@ -158,34 +183,49 @@
 
                 entry.target.classList.add('is-visible')
 
-    })
-}
+                })
+            }
 
-const options = {
-    root: root,
-    rootMargin: "0px 0px -40% 0px"
-}
+            const options = {
+                root: root,
+                rootMargin: "0px 0px -40% 0px"
+            }
 
-const observer = new IntersectionObserver(observeAction, options)
+            const observer = new IntersectionObserver(observeAction, options)
 
-progressItems.forEach( target => {
-    observer.observe(target)
-})
-
-
+            progressItems.forEach( target => {
+                observer.observe(target)
+            })
 
             count++
-        });        
+        });   
+
+        const y = sessionStorage.getItem("scrollY");
+        if (y !== null) {
+          window.scrollTo(0, parseInt(y, 10));
+          sessionStorage.removeItem("scrollY");
+        }
+
+
+        for (let i = 0; i < count; i++) {
+          let d = document.getElementById("ele"+i)
+          d.addEventListener("click",()=>{
+            console.log(template)
+            writeUserData(i, template[i][1], template[i][2], Date(), template[i][4]); 
+            sessionStorage.setItem("scrollY", window.scrollY);
+            location.reload()
+          })
+        }
       }
       
-      writeUserData(2, "皿洗い", "household", Date("2015-03-25"), 1);  //delete this after registeration
+      // writeUserData(3, "dammy", "household", Date(), 0.001);  //use this function to update
       readUserData(0);
+
     </script>
   </head>
   <body>
     <div>
-      <div class="cards">
-      </div>
+      <div class="cards"></div>
     </div>
     <script src="script.js"></script>
   </body>
