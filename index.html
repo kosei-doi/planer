@@ -1,109 +1,192 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>planer</title>
-  <link rel="stylesheet" href="style.css">
-  <script type="module">
-    // Import the functions you need from the SDKs you need
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-analytics.js";
-    import { getDatabase, ref, set,onValue } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
-    // TODO: Add SDKs for Firebase products that you want to use
-    // https://firebase.google.com/docs/web/setup#available-libraries
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>planer</title>
+    <link rel="stylesheet" href="style.css" />
+    <script type="module">
+      // Import the functions you need from the SDKs you need
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-analytics.js";
+      import {
+        getDatabase,
+        ref,
+        set,
+        onValue,
+      } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
+      // TODO: Add SDKs for Firebase products that you want to use
+      // https://firebase.google.com/docs/web/setup#available-libraries
 
-    // Your web app's Firebase configuration
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-    const firebaseConfig = {
-      apiKey: "AIzaSyA2M27QaMYPaWK5A1-b2wwvICq5KNcTZt8",
-      authDomain: "planer-275c4.firebaseapp.com",
-      databaseURL: "https://planer-275c4-default-rtdb.firebaseio.com",
-      projectId: "planer-275c4",
-      storageBucket: "planer-275c4.firebasestorage.app",
-      messagingSenderId: "752551364905",
-      appId: "1:752551364905:web:07673595f83cea2c618f38",
-      measurementId: "G-12R593XP3D"
-    };
+      // Your web app's Firebase configuration
+      // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+      const firebaseConfig = {
+        apiKey: "AIzaSyA2M27QaMYPaWK5A1-b2wwvICq5KNcTZt8",
+        authDomain: "planer-275c4.firebaseapp.com",
+        databaseURL: "https://planer-275c4-default-rtdb.firebaseio.com",
+        projectId: "planer-275c4",
+        storageBucket: "planer-275c4.firebasestorage.app",
+        messagingSenderId: "752551364905",
+        appId: "1:752551364905:web:07673595f83cea2c618f38",
+        measurementId: "G-12R593XP3D",
+      };
 
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-    const db = getDatabase(app);
-    
-    
-    function writeUserData(userId, name, email, imageUrl) {
-    const db = getDatabase();
-    set(ref(db, 'users/' + userId), {
-      username: name,
-      email: email,
-      profile_picture : imageUrl
-      });
-    }
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+      const db = getDatabase(app);
 
-    function readUserData(userId) {
-      const db = getDatabase();
-      const userRef = ref(db, 'users/');
+      function writeUserData(planId, name, category, startDate, duration) {
+        const db = getDatabase();
+        set(ref(db, "plans/" + planId), {
+          plan_name: name,
+          category: category,
+          start_date: startDate,
+          duration: duration
+        });
+      }
+
+      function readUserData(userId) {
+        const db = getDatabase();
+        const userRef = ref(db, "plans/");
+
+        onValue(
+          userRef,
+          (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+              console.log("User data:", data);
+              draw(data)
+            } else {
+              console.log("No data available for user:", userId);
+            }
+          },
+          (error) => {
+            console.error("Error reading user data:", error);
+          }
+        );
+      }
+
+      function draw(data) {
+        let count = 0
+        data.forEach(datum => {
+            console.log(datum.plan_name)
+
+            let percent = 66
+            let colorCode = "#f46060"
+            let date = new Date(datum.start_date)
+            let startDate = "開始 " + String(date.getMonth() + 1) + "/" + String(date.getDate());
+            let duration = "期間 " + datum.duration + "日"
+
+            let content = '<div class="card"><div class="title">'
+            content += datum.plan_name
+            content += '</div><div class="progress-item" data-percent="'
+            content += percent
+            content += '" data-duration="1020" data-stroke-width="9" data-stroke-color="'
+            content += colorCode
+            content += '"data-start-position="default"><div class="progress-item__inner"><svg class="progress-svg" viewBox="0 0 80 80"><circle class="progress-background"cx="40"cy="40"r="30"></circle><circle class="progress-bar" cx="40" cy="40" r="30"></circle></svg><div class="progress-text"></div></div><div><div>'
+            content += startDate
+            content += '</div><div>'
+            content += duration
+            content += '</div></div></div><div class="btn btn--orange" id='
+            content += count
+            content += '>完了</div></div>'
+
+
+            console.log(content)
+            let container = document.querySelector(".cards")
+            container.innerHTML += content
+
+            
+            const progressItems = document.querySelectorAll('.progress-item')
+            const root = document.querySelector('.container')
+
+            const observeAction = (entries) => {
+            entries.forEach(entry => {
+                if(!entry.isIntersecting || entry.target.classList.contains('is-visible')){
+                    return
+                }
+
+                const percent = parseFloat(entry.target.dataset.percent)
+
+                if( !Number.isFinite(percent)){
+                    return false
+                }
+
+                const duration = parseInt(entry.target.dataset.duration) || 1500
+                const eleProgressBar = entry.target.querySelector('.progress-bar')
+                const eleProgressValue = entry.target.querySelector('.progress-text')
+                const radius = eleProgressBar.getAttribute('r')
+                const circumference = 2 * Math.PI * radius
+                const strokeDashOffset = Math.round(circumference - circumference * percent / 100)
+
+
+                const startPosition = {
+                    'right':'0deg',
+                    'bottom':'90deg',
+                    'left':'180deg',
+                    'default':'-90deg'
+                }[entry.target.dataset.startPosition] || '-90deg'
+
+
+                const deciamlPointLength = (String(percent).split('.')[1] || '').length
+                const startTime = performance.now()
+                let countValue = 0
+
+                const countUp = timestamp => {
+                    const elapsed = timestamp - startTime
+                    countValue = elapsed / duration * percent
+                    eleProgressValue.innerText = countValue.toFixed(deciamlPointLength)
+
+                    if(elapsed < duration) {
+                        requestAnimationFrame(countUp)
+                    } else {
+                        eleProgressValue.innerText = percent
+                    }
+                }
+
+
+                entry.target.style.cssText = `
+                    --duration: ${ duration }ms;
+                    --start-rotate: ${ startPosition };
+                    --stroke-dashoffset: ${ strokeDashOffset };
+                    --stroke-color: ${ entry.target.dataset.strokeColor };
+                    --stroke-width: ${ entry.target.dataset.strokeWidth };
+                `;
+
+                requestAnimationFrame( countUp )
+
+                entry.target.classList.add('is-visible')
+
+    })
+}
+
+const options = {
+    root: root,
+    rootMargin: "0px 0px -40% 0px"
+}
+
+const observer = new IntersectionObserver(observeAction, options)
+
+progressItems.forEach( target => {
+    observer.observe(target)
+})
+
+
+
+            count++
+        });        
+      }
       
-      onValue(userRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          console.log('User data:', data);
-          // You can use the data here, for example:
-          // - Update UI elements
-          // - Store in variables
-          // - Process the data
-        } else {
-          console.log('No data available for user:', userId);
-        }
-      }, (error) => {
-        console.error('Error reading user data:', error);
-      });
-    }
-
-    // Example usage:
-    writeUserData(0, "kosei", "fa@gmail.com", "er");
-    readUserData(3); // This will read the data we just wrote
-
-    
-  </script>
-  <script src="script.js"></script>
-</head>
-<body>
-  <div>
-    <div class="cards">
-      <div class="card">
-        <div class="title">掃除</div>
-        <div class="graph">
-          <svg class="circle" viewBox = "0 0 28 28">
-            <circle cx="50%" cy="50%" r="12"></circle>
-          </svg>
-        </div>
-        <div class="progress">30%</div>
-        <div class="startdate">開始 3/25</div>
-        <div class="duration">期間 5日</div>
-        <a href="" class="btn btn--orange">完了</a>
+      writeUserData(2, "皿洗い", "household", Date("2015-03-25"), 1);  //delete this after registeration
+      readUserData(0);
+    </script>
+  </head>
+  <body>
+    <div>
+      <div class="cards">
       </div>
-      <div class="card">
-        <div class="title">皿洗い</div>
-        <div class="graph">
-          <svg class="circle" viewBox = "0 0 33 33">
-            <circle cx="50%" cy="50%" r="12"></circle>
-          </svg>
-        </div>
-        <a href="" class="btn btn--orange">完了</a>
-      </div>
-      <div class="card">
-        <div class="title">風呂洗い</div>
-        <div class="graph">
-          <svg class="circle" viewBox = "0 0 33 33">
-            <circle cx="50%" cy="50%" r="12"></circle>
-          </svg>
-        </div>
-        <a href="" class="btn btn--orange">完了</a>
-      </div>
-      
     </div>
-  </div>
-</body>
+    <script src="script.js"></script>
+  </body>
 </html>

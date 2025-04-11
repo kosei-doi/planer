@@ -3,7 +3,7 @@
     padding: 20px;
     margin: 20px auto;
     width: 280px;
-    height: 350px;
+    height: 450px;
     text-align: center;
     border-radius: 15px;
 }
@@ -20,17 +20,6 @@
     --stroke-color: #f46060;
 }
 
-.circle circle {
-    fill: none;
-    stroke-width: 4px;
-}
-
-.circle circle:nth-child(1) {
-    stroke: var(--stroke-color);
-    stroke-dasharray: var(--progress), 100;
-    stroke-dashoffset: 0;
-    transition: stroke 0.3s ease;
-}
 
 
 .btn,
@@ -55,6 +44,7 @@ button.btn {
   letter-spacing: 0.1em;
   color: #212529;
   border-radius: 0.5rem;
+  margin-top: 10px;
 }
 
 
@@ -69,4 +59,64 @@ a.btn--orange {
 a.btn--orange:hover {
   color: #fff;
   background: #f56500;
+}
+
+.progress-item {
+  flex:1;
+  flex-basis: calc( 50% - 100px );
+  max-width: 380px;
+  position: relative;
+  background-image: linear-gradient( 135deg, rgba(#fff, 0.18) 0% ,rgba(#fff, 0.04)  100%);
+  border-radius: 5px;
+  backdrop-filter:blur(5px);
+}
+
+.progress-item__inner{
+  position: relative;
+}
+
+.progress-svg {
+  width: 100%;
+  height: 100%;
+  
+  circle{
+    stroke-dasharray: 188;
+    stroke-width: var(--stroke-width, 8);
+  }
+}
+
+.progress-background {
+  fill: none;
+  stroke: rgba(#aaa,.3);
+  stroke-width: 8;
+}
+
+.progress-bar {
+  fill: none; 
+  stroke: var(--stroke-color, #f46060);
+  stroke-dashoffset:var(--stroke-dashoffset , 188);
+  stroke-linecap: round;
+  transform-origin: center;
+  transform: rotate( var( --start-rotate, -90deg ) );
+  transition: stroke-dashoffset var(--duration, 1.5s) ease-out;
+}
+
+
+.progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 3rem;
+  font-weight:100;
+}
+
+
+.progress-value {
+  font-size: 2rem;
+}
+
+.progress-title{
+  font-size: 1.12rem;
+  margin-top:20px;
 }

@@ -1,48 +1,73 @@
-// Get all cards
-const cards = document.querySelectorAll('.card');
+const progressItems = document.querySelectorAll('.progress-item')
+const root = document.querySelector('.container')
 
-// Initialize progress values
-const progressValues = {
-  '掃除': 0,
-  '皿洗い': 0,
-  '風呂洗い': 0
-};
+const observeAction = (entries) => {
+    entries.forEach(entry => {
+        if(!entry.isIntersecting || entry.target.classList.contains('is-visible')){
+            return
+        }
 
-// Function to update progress
-function updateProgress(title, value) {
-  const card = Array.from(cards).find(card => card.querySelector('.title').textContent === title);
-  if (card) {
-    const circle = card.querySelector('.circle');
-    circle.style.setProperty('--progress', value);
-    
-    // Update color based on progress
-    let color = '#f46060'; // default color
-    if (value >= 75) color = '#00ff00';
-    else if (value >= 50) color = '#ffff00';
-    else if (value >= 25) color = '#ffa500';
-    else if (value > 0) color = '#ff0000';
-    
-    circle.style.setProperty('--stroke-color', color);
-  }
+        const percent = parseFloat(entry.target.dataset.percent)
+
+        if( !Number.isFinite(percent)){
+            return false
+        }
+
+        const duration = parseInt(entry.target.dataset.duration) || 1500
+        const eleProgressBar = entry.target.querySelector('.progress-bar')
+        const eleProgressValue = entry.target.querySelector('.progress-text')
+        const radius = eleProgressBar.getAttribute('r')
+        const circumference = 2 * Math.PI * radius
+        const strokeDashOffset = Math.round(circumference - circumference * percent / 100)
+
+
+        const startPosition = {
+            'right':'0deg',
+            'bottom':'90deg',
+            'left':'180deg',
+            'default':'-90deg'
+        }[entry.target.dataset.startPosition] || '-90deg'
+
+
+        const deciamlPointLength = (String(percent).split('.')[1] || '').length
+        const startTime = performance.now()
+        let countValue = 0
+
+        const countUp = timestamp => {
+            const elapsed = timestamp - startTime
+            countValue = elapsed / duration * percent
+            eleProgressValue.innerText = countValue.toFixed(deciamlPointLength)
+
+            if(elapsed < duration) {
+                requestAnimationFrame(countUp)
+            } else {
+                eleProgressValue.innerText = percent
+            }
+        }
+
+
+        entry.target.style.cssText = `
+            --duration: ${ duration }ms;
+            --start-rotate: ${ startPosition };
+            --stroke-dashoffset: ${ strokeDashOffset };
+            --stroke-color: ${ entry.target.dataset.strokeColor };
+            --stroke-width: ${ entry.target.dataset.strokeWidth };
+        `;
+
+        requestAnimationFrame( countUp )
+
+        entry.target.classList.add('is-visible')
+
+    })
 }
 
-// Add click handlers to buttons
-cards.forEach(card => {
-  const button = card.querySelector('.btn--orange');
-  const title = card.querySelector('.title').textContent;
-  
-  button.addEventListener('click', (e) => {
-    e.preventDefault();
-    progressValues[title] = 100;
-    updateProgress(title, 100);
-    
-    // Here you would typically update Firebase
-    // const taskRef = ref(database, `tasks/${title}`);
-    // set(taskRef, { progress: 100 });
-  });
-});
+const options = {
+    root: root,
+    rootMargin: "0px 0px -40% 0px"
+}
 
-// Initialize progress for all cards
-Object.entries(progressValues).forEach(([title, value]) => {
-  updateProgress(title, value);
-});
+const observer = new IntersectionObserver(observeAction, options)
+
+progressItems.forEach( target => {
+    observer.observe(target)
+})
