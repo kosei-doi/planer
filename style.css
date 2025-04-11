@@ -3,7 +3,7 @@
     padding: 20px;
     margin: 20px auto;
     width: 280px;
-    height: 270px;
+    height: 350px;
     text-align: center;
     border-radius: 15px;
 }
@@ -16,7 +16,7 @@
     width: 150px;
     height: 150px;
     transform:rotate(-90deg);
-    --progress: 3.14;
+    --progress: 44;
     --stroke-color: #f46060;
 }
 
